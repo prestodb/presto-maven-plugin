@@ -151,7 +151,7 @@
         <profile>
             <id>debug-gpg</id>
             <properties>
-                <skipTests>true</skipTests>
+                <skipTests>false</skipTests>
             </properties>
             <build>
                 <plugins>
