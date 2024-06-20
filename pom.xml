@@ -122,17 +122,14 @@
         <profile>
             <id>oss-release</id>
             <properties>
-                <!-- tests run in the preparation step of the release -->
                 <skipTests>false</skipTests>
             </properties>
             <build>
                 <plugins>
-                    <!-- oss requires a javadoc jar. Build one when releasing. -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
                     </plugin>
-                    <!-- Sign artifacts using gpg for oss upload -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
@@ -142,7 +139,15 @@
                                 <arg>--pinentry-mode</arg>
                                 <arg>loopback</arg>
                             </gpgArguments>
+                            <passphrase>${GPG_PASSPHRASE}</passphrase>
                         </configuration>
+                        <executions>
+                          <execution>
+                            <goals>
+                              <goal>sign</goal>
+                            </goals>
+                          </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>
