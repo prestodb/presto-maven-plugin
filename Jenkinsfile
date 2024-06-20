@@ -37,7 +37,10 @@ pipeline {
     stages {
         stage('Setup') {
             steps {
-                sh 'apt update && apt install -y bash build-essential git gpg python3 python3-venv'
+                sh '''
+                    apt update && apt install -y bash build-essential git gpg python3 python3-venv
+                    git config --global --add safe.directory ${WORKSPACE}
+                '''
             }
         }
 
