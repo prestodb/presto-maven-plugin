@@ -151,7 +151,7 @@
         <profile>
             <id>debug-gpg</id>
             <properties>
-                <skipTests>false</skipTests>
+                <skipTests>true</skipTests>
             </properties>
             <build>
                 <plugins>
@@ -164,6 +164,15 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
                         <version>3.2.4</version>
+                        <executions>
+                          <execution>
+                            <id>sign-artifacts</id>
+                            <phase>package</phase>
+                            <goals>
+                              <goal>sign</goal>
+                            </goals>
+                          </execution>
+                        </executions>
                         <configuration>
                             <gpgArguments>
                                 <arg>--pinentry-mode</arg>
