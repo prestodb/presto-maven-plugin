@@ -142,7 +142,7 @@
                                 <arg>--pinentry-mode</arg>
                                 <arg>loopback</arg>
                             </gpgArguments>
-                            <passphrase>${gpg.passphrase}</passphrase>
+                            <passphrase>${GPG_PASSPHRASE}</passphrase>
                         </configuration>
                         <executions>
                           <execution>
