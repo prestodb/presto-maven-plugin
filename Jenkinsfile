@@ -53,7 +53,7 @@ pipeline {
                     mvn -s ${WORKSPACE}/jenkins/settings.xml -V -B -U -e -T2C install \
                         -Dgpg.passphrase=${GPG_PASSPHRASE} \
                         -DskipTests \
-                        -Pdebug-gpg \
+                        -Pdebug-gpg
                 '''
             }
         }
