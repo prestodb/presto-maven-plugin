@@ -65,7 +65,9 @@ pipeline {
 
                     mvn release:prepare -B \
                         -DautoVersionSubmodules=true \
-                        -DgenerateBackupPoms=false
+                        -DgenerateBackupPoms=false \
+                        -Dgpg.passphrase=${GPG_PASSPHRASE} \
+                        -Poss-release
 
                     git branch
                     git log --pretty="format:%ce: %s" -8
