@@ -142,7 +142,15 @@
                                 <arg>--pinentry-mode</arg>
                                 <arg>loopback</arg>
                             </gpgArguments>
+                            <passphrase>${gpg.passphrase}</passphrase>
                         </configuration>
+                        <executions>
+                          <execution>
+                            <goals>
+                              <goal>sign</goal>
+                            </goals>
+                          </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>
