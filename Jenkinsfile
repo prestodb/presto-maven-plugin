@@ -50,10 +50,11 @@ pipeline {
                     gpg --list-secret-keys
                     printenv | sort
 
-                    mvn -s ${WORKSPACE}/jenkins/settings.xml -V -B -U -e -T2C install \
+                    mvn release:prepare -B \
+                        -DautoVersionSubmodules=true \
+                        -DgenerateBackupPoms=false \
                         -Dgpg.passphrase=${GPG_PASSPHRASE} \
-                        -DskipTests \
-                        -Pdebug-gpg
+                        -Poss-release
                 '''
             }
         }
