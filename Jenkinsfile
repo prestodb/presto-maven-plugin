@@ -51,9 +51,9 @@ pipeline {
                     printenv | sort
 
                     mvn release:prepare -B \
+                        -Dgpg.passphrase=${GPG_PASSPHRASE} \
                         -DautoVersionSubmodules=true \
                         -DgenerateBackupPoms=false \
-                        -Dgpg.passphrase=${GPG_PASSPHRASE} \
                         -Poss-release
                 '''
             }
