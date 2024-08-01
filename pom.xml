@@ -18,7 +18,7 @@
     <url>https://github.com/prestodb/presto-maven-plugin</url>
 
     <properties>
-        <mavenVersion>3.2.3</mavenVersion>
+        <mavenVersion>3.8.1</mavenVersion>
         <mavenPluginPluginVersion>3.2</mavenPluginPluginVersion>
         <provisioVersion>0.1.40</provisioVersion>
         <takari.javaSourceVersion>1.8</takari.javaSourceVersion>
@@ -73,7 +73,7 @@
         <dependency>
             <groupId>org.codehaus.plexus</groupId>
             <artifactId>plexus-utils</artifactId>
-            <version>3.0.17</version>
+            <version>3.0.24</version>
         </dependency>
 
         <dependency>
@@ -117,4 +117,46 @@
             </resource>
         </resources>
     </build>
+
+    <profiles>
+        <profile>
+            <id>oss-release</id>
+            <properties>
+                <!-- tests run in the preparation step of the release -->
+                <skipTests>true</skipTests>
+            </properties>
+            <build>
+                <plugins>
+                    <!-- oss requires a javadoc jar. Build one when releasing. -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                    </plugin>
+                    <!-- Sign artifacts using gpg for oss upload -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.4</version>
+                        <configuration>
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>loopback</arg>
+                            </gpgArguments>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>deploy-to-ossrh</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
