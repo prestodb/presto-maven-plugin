@@ -86,7 +86,7 @@ pipeline {
                     echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
                     printenv | sort
 
-                    mvn release:prepare -B -DskipTests \
+                    mvn release:prepare -B \
                         -DautoVersionSubmodules=true \
                         -DgenerateBackupPoms=false \
                         -Dgpg.passphrase=${GPG_PASSPHRASE} \
