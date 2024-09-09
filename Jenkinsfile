@@ -34,7 +34,7 @@ pipeline {
         GPG_TRUST      = credentials("presto-release-gpg-trust")
         GPG_PASSPHRASE = credentials("presto-release-gpg-passphrase")
 
-        GITHUB_OSS_TOKEN_ID = 'github-personal-token-wanglinsong'
+        GITHUB_OSS_TOKEN_ID = 'github-personal-access-token-prestodb'
 
         SONATYPE_NEXUS_CREDS    = credentials('presto-sonatype-nexus-creds')
         SONATYPE_NEXUS_PASSWORD = "$SONATYPE_NEXUS_CREDS_PSW"
@@ -53,7 +53,7 @@ pipeline {
     parameters {
         booleanParam(name: 'PERFORM_MAVEN_RELEASE',
                      defaultValue: false,
-                     description: 'Release and update development version when running in the master')
+                     description: 'Release and update development version when running in the master branch')
     }
 
     stages {
@@ -78,10 +78,19 @@ pipeline {
                     git config --global user.name "oss-release-bot"
                 '''
 
-                sh '''
-                    mvn release:prepare -B -DskipTests \
+                sh '''#!/bin/bash -ex
+                    export GPG_TTY=$TTY
+                    gpg --batch --import ${GPG_SECRET}
+                    echo ${GPG_TRUST} | gpg --import-ownertrust -
+                    gpg --list-secret-keys
+                    echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+                    printenv | sort
+
+                    mvn release:prepare -B \
                         -DautoVersionSubmodules=true \
-                        -DgenerateBackupPoms=false
+                        -DgenerateBackupPoms=false \
+                        -Dgpg.passphrase=${GPG_PASSPHRASE} \
+                        -Poss-release
 
                     git branch
                     git log --pretty="format:%ce: %s" -8
@@ -126,10 +135,6 @@ pipeline {
                 echo "Release ${REPO_RELEASE_TAG} maven artifacts"
                 sh '''#!/bin/bash -ex
                     export GPG_TTY=$TTY
-                    gpg --batch --import ${GPG_SECRET}
-                    echo ${GPG_TRUST} | gpg --import-ownertrust -
-                    gpg --list-secret-keys
-                    echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
                     printenv | sort
 
                     git checkout ${REPO_RELEASE_TAG}
