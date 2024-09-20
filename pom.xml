@@ -67,7 +67,7 @@
         <dependency>
             <groupId>com.facebook.presto</groupId>
             <artifactId>presto-spi</artifactId>
-            <version>0.76</version>
+            <version>0.289</version>
         </dependency>
 
         <dependency>

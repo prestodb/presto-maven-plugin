@@ -98,4 +98,35 @@ public class CheckerIntegrationTest
                 .assertErrorFreeLog()
                 .assertLogText("[INFO] Skipping SPI dependency checks");
     }
+
+    @Test
+    public void testBasicCoordinatorPlugin()
+            throws Exception
+    {
+        File basedir = resources.getBasedir("basic-coordinator-plugin");
+        maven.forProject(basedir)
+                .execute("verify")
+                .assertErrorFreeLog();
+    }
+
+    @Test
+    public void testNoPluginImplementations()
+            throws Exception
+    {
+        File basedir = resources.getBasedir("no-plugins");
+        maven.forProject(basedir)
+                .execute("verify")
+                .assertLogText("[ERROR] You must have at least one class that implements com.facebook.presto.spi.Plugin or com.facebook.presto.spi.CoordinatorPlugin.");
+    }
+
+    @Test
+    public void testBothPluginImplementations()
+            throws Exception
+    {
+        File basedir = resources.getBasedir("both-plugins");
+        maven.forProject(basedir)
+                .execute("verify")
+                .assertLogText("You have classes that implement both com.facebook.presto.spi.Plugin and com.facebook.presto.spi.CoordinatorPlugin. " +
+                        "You can only have one plugin implementation per project.");
+    }
 }
