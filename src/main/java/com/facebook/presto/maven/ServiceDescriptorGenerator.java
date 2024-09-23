@@ -14,6 +14,7 @@
 package com.facebook.presto.maven;
 
 import com.facebook.presto.spi.Plugin;
+import com.facebook.presto.spi.CoordinatorPlugin;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
@@ -38,7 +39,8 @@ import static java.lang.String.format;
 
 /**
  * Mojo that generates the default service descriptor for Presto plugins to
- * {@code META-INF/services/com.facebook.presto.spi.Plugin}.
+ * {@code META-INF/services/com.facebook.presto.spi.Plugin} and
+ * {@code META-INF/services/com.facebook.presto.spi.CoordinatorPlugin}.
  *
  * @author Jason van Zyl
  */
@@ -71,32 +73,60 @@ public class ServiceDescriptorGenerator
         }
 
         List<Class<?>> pluginClasses;
+        List<Class<?>> coordinatorPluginClasses;
+
         try {
             URLClassLoader loader = createClassloaderFromCompileTimeDependencies();
             pluginClasses = findImplementationsOf(Plugin.class, loader);
+            coordinatorPluginClasses = findImplementationsOf(CoordinatorPlugin.class, loader);
         }
         catch (Exception e) {
-            throw new MojoExecutionException(format("%n%nError scanning for classes implementing %s.", Plugin.class.getName()), e);
-        }
-        if (pluginClasses.isEmpty()) {
-            throw new MojoExecutionException(format("%n%nYou must have at least one class that implements %s.", Plugin.class.getName()));
+            throw new MojoExecutionException(format("%n%nError scanning for classes implementing %s and %s.", Plugin.class.getName(), CoordinatorPlugin.class.getName()), e);
         }
 
+        if (pluginClasses.isEmpty() && coordinatorPluginClasses.isEmpty()) {
+            throw new MojoExecutionException(format("%n%nYou must have at least one class that implements %s or %s.", Plugin.class.getName(), CoordinatorPlugin.class.getName()));
+        }
+
+        if (!pluginClasses.isEmpty() && !coordinatorPluginClasses.isEmpty()) {
+            throw new MojoExecutionException(format("%n%nYou have classes that implement both %s and %s. You can only have one plugin implementation per project.", Plugin.class.getName(), CoordinatorPlugin.class.getName()));
+        }
+
+        if (!pluginClasses.isEmpty()) {
+            ensureSinglePluginImplementation(pluginClasses, Plugin.class);
+            writeServiceDescriptor(pluginClasses, Plugin.class, servicesFile);
+        }
+        else {
+            ensureSinglePluginImplementation(coordinatorPluginClasses, CoordinatorPlugin.class);
+            // Create a new servicesFile if plugin implementation is of type CoordinatorPlugin.
+            File coordinatorPluginServicesFile = new File(servicesFile.getParent() + "/" + CoordinatorPlugin.class.getName());
+            writeServiceDescriptor(coordinatorPluginClasses, CoordinatorPlugin.class,  coordinatorPluginServicesFile);
+        }
+
+    }
+
+    private void writeServiceDescriptor(List<Class<?>> pluginClasses, Class<?> classImplementationTemplate, File servicesFileToWrite)
+            throws MojoExecutionException
+    {
+        try {
+            Class<?> pluginClass = pluginClasses.get(0);
+            Files.write(pluginClass.getName().getBytes(Charsets.UTF_8), servicesFileToWrite);
+            getLog().info(format("Wrote META-INF/services/%s with %s", classImplementationTemplate.getName(), pluginClass.getName()));
+        }
+        catch (IOException e) {
+            throw new MojoExecutionException("Failed to write service descriptor.", e);
+        }
+    }
+
+    private void ensureSinglePluginImplementation(List<Class<?>> pluginClasses, Class<?> classImplementationTemplate)
+            throws MojoExecutionException
+    {
         if (pluginClasses.size() > 1) {
             StringBuilder sb = new StringBuilder();
             for (Class<?> pluginClass : pluginClasses) {
                 sb.append(pluginClass.getName()).append(LS);
             }
-            throw new MojoExecutionException(format("%n%nYou have more than one class that implements %s:%n%n%s%nYou can only have one per plugin project.", Plugin.class.getName(), sb));
-        }
-
-        try {
-            Class<?> pluginClass = pluginClasses.get(0);
-            Files.write(pluginClass.getName().getBytes(Charsets.UTF_8), servicesFile);
-            getLog().info(format("Wrote META-INF/services/com.facebook.presto.spi.Plugin with %s", pluginClass.getName()));
-        }
-        catch (IOException e) {
-            throw new MojoExecutionException("Failed to write service descriptor.", e);
+            throw new MojoExecutionException(format("%n%nYou have more than one class that implements %s:%n%n%s%nYou can only have one per plugin project.", classImplementationTemplate.getName(), sb));
         }
     }
 

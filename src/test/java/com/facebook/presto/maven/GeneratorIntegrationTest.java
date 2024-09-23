@@ -22,7 +22,8 @@ import static org.junit.Assert.assertEquals;
 @SuppressWarnings({"JUnitTestNG", "PublicField"})
 public class GeneratorIntegrationTest
 {
-    private static final String DESCRIPTOR = "META-INF/services/com.facebook.presto.spi.Plugin";
+    private static final String PLUGIN_DESCRIPTOR = "META-INF/services/com.facebook.presto.spi.Plugin";
+    private static final String COORDINATOR_PLUGIN_DESCRIPTOR = "META-INF/services/com.facebook.presto.spi.CoordinatorPlugin";
 
     @Rule
     public final TestResources resources = new TestResources();
@@ -44,9 +45,24 @@ public class GeneratorIntegrationTest
                 .execute("package")
                 .assertErrorFreeLog();
 
-        File output = new File(basedir, "target/classes/" + DESCRIPTOR);
+        File output = new File(basedir, "target/classes/" + PLUGIN_DESCRIPTOR);
 
         List<String> lines = readAllLines(output.toPath(), UTF_8);
         assertEquals(ImmutableList.of("its.BasicPlugin"), lines);
+    }
+
+    @Test
+    public void testBasicCoordinatorPlugin()
+            throws Exception
+    {
+        File basedir = resources.getBasedir("basic-coordinator-plugin");
+        maven.forProject(basedir)
+                .execute("package")
+                .assertErrorFreeLog();
+
+        File output = new File(basedir, "target/classes/" + COORDINATOR_PLUGIN_DESCRIPTOR);
+
+        List<String> lines = readAllLines(output.toPath(), UTF_8);
+        assertEquals(ImmutableList.of("its.BasicCoordinatorPlugin"), lines);
     }
 }
