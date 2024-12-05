@@ -1,10 +1,7 @@
 AGENT_YAML = '''
     apiVersion: v1
     kind: Pod
-    metadata:
-      namespace: oss-agent
     spec:
-      serviceAccountName: oss-agent
       containers:
       - name: maven
         image: maven:3.8.6-openjdk-8-slim
@@ -34,7 +31,7 @@ pipeline {
         GPG_TRUST      = credentials("presto-release-gpg-trust")
         GPG_PASSPHRASE = credentials("presto-release-gpg-passphrase")
 
-        GITHUB_OSS_TOKEN_ID = 'github-personal-access-token-prestodb'
+        GITHUB_OSS_TOKEN_ID = 'oss-presto-github-token'
 
         SONATYPE_NEXUS_CREDS    = credentials('presto-sonatype-nexus-creds')
         SONATYPE_NEXUS_PASSWORD = "$SONATYPE_NEXUS_CREDS_PSW"
