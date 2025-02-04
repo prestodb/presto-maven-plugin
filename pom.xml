@@ -120,7 +120,7 @@
 
     <profiles>
         <profile>
-            <id>oss-release</id>
+            <id>takari-release</id>
             <build>
                 <plugins>
                     <!-- oss requires a javadoc jar. Build one when releasing. -->

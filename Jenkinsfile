@@ -71,8 +71,8 @@ pipeline {
 
                 sh '''
                     git config --global --add safe.directory ${PWD}
-                    git config --global user.email "oss-release-bot@prestodb.io"
-                    git config --global user.name "oss-release-bot"
+                    git config --global user.email "ci@list.prestodb.io"
+                    git config --global user.name "prestodb-ci"
                 '''
 
                 sh '''#!/bin/bash -ex
@@ -87,7 +87,7 @@ pipeline {
                         -DautoVersionSubmodules=true \
                         -DgenerateBackupPoms=false \
                         -Dgpg.passphrase=${GPG_PASSPHRASE} \
-                        -Poss-release
+                        -Ptakari-release
 
                     git branch
                     git log --pretty="format:%ce: %s" -8
@@ -146,7 +146,7 @@ pipeline {
                         -DkeepStagingRepositoryOnCloseRuleFailure=true \
                         -DkeepStagingRepositoryOnFailure=true \
                         -DskipTests \
-                        -Poss-release \
+                        -Ptakari-release \
                         -Pdeploy-to-ossrh \
                         -DstagingProgressTimeoutMinutes=10
                 '''

@@ -10,6 +10,11 @@
       <password>${env.SONATYPE_NEXUS_PASSWORD}</password>
     </server>
     <server>
+      <id>sonatype.releases</id>
+      <username>${env.SONATYPE_NEXUS_USERNAME}</username>
+      <password>${env.SONATYPE_NEXUS_PASSWORD}</password>
+    </server>
+    <server>
       <id>sonatype.snapshots</id>
       <username>${env.SONATYPE_NEXUS_USERNAME}</username>
       <password>${env.SONATYPE_NEXUS_PASSWORD}</password>
