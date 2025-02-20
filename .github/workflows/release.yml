@@ -1,0 +1,93 @@
+name: Publish maven release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - name: Check branch
+        if: ${{ github.ref != 'refs/heads/master' }}
+        run: echo "Invalid branch. This action can only be run on the master branch." && exit 1
+
+      - name: Checkout presto source
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PRESTODB_CI_TOKEN }}
+          fetch-depth: 0
+          fetch-tags: true
+          ref: master
+          show-progress: false
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          server-id: ossrh
+          server-username: "${{ secrets.NEXUS_USERNAME }}"
+          server-password: "${{ secrets.NEXUS_PASSWORD }}"
+          gpg-private-key: "${{ secrets.GPG_SECRET }}"
+          gpg-passphrase: "${{ secrets.GPG_PASSPHRASE }}"
+  
+      - name: Configure git
+        run: |
+          git config --global --add safe.directory ${{github.workspace}}
+          git config --global user.email "ci@lists.prestodb.io"
+          git config --global user.name "prestodb-ci"
+          git config pull.rebase false
+
+      - name: Determine Current Version
+        id: version
+        run: |
+          CURRENT_VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -ntp -DforceStdout)
+          echo "current version: $CURRENT_VERSION"
+          echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
+
+      - name: Prepare Release
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          mvn release:prepare -B \
+            -DautoVersionSubmodules=true \
+            -DgenerateBackupPoms=false \
+            -Dgpg.passphrase=$GPG_PASSPHRASE \
+            -Ptakari-release
+          git branch
+          git log --pretty="format:%ce: %s" -8
+          SCM_TAG=$(cat release.properties | grep scm.tag=)
+          echo ${SCM_TAG#*=} > repo-release-tag.txt
+          RELEASE_TAG=$(grep scm.tag= release.properties | cut -d'=' -f2)
+          echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
+          echo "RELEASE_TAG=$RELEASE_TAG"
+
+      - name: Release Maven Artifacts
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          SONATYPE_NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          SONATYPE_NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+        run: |
+          git checkout "${{ env.RELEASE_TAG }}"
+          git status
+          git branch
+          git log --pretty="format:%ce: %s" -8
+          head -n 18 pom.xml
+          mvn -s settings.xml -V -B -U -e -T2C deploy \
+            -DautoReleaseAfterClose=true \
+            -Dgpg.passphrase="$GPG_PASSPHRASE" \
+            -DkeepStagingRepositoryOnCloseRuleFailure=true \
+            -DkeepStagingRepositoryOnFailure=true \
+            -DskipTests \
+            -Ptakari-release \
+            -Pdeploy-to-ossrh \
+            -DstagingProgressTimeoutMinutes=10
+
+      - name: Push release tag to gitHub
+        run: |
+          git switch master
+          git branch
+          git --no-pager log --since="60 days ago" --graph --pretty=format:'%C(auto)%h%d%Creset %C(cyan)(%cd)%Creset %C(green)%cn <%ce>%Creset %s'
+          head -n 18 pom.xml
+          git push --follow-tags origin master
