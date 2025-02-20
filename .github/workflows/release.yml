@@ -15,7 +15,7 @@ jobs:
       - name: Checkout presto source
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.PRESTODB_CI_TOKEN }}
+          token: "${{ secrets.PRESTODB_CI_TOKEN }}"
           fetch-depth: 0
           fetch-tags: true
           ref: master
@@ -48,7 +48,7 @@ jobs:
 
       - name: Prepare Release
         env:
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          GPG_PASSPHRASE: "${{ secrets.GPG_PASSPHRASE }}"
         run: |
           mvn release:prepare -B \
             -DautoVersionSubmodules=true \
@@ -65,9 +65,9 @@ jobs:
 
       - name: Release Maven Artifacts
         env:
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          SONATYPE_NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
-          SONATYPE_NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+          GPG_PASSPHRASE: "${{ secrets.GPG_PASSPHRASE }}"
+          SONATYPE_NEXUS_USERNAME: "${{ secrets.NEXUS_USERNAME }}"
+          SONATYPE_NEXUS_PASSWORD: "${{ secrets.NEXUS_PASSWORD }}"
         run: |
           git checkout "${{ env.RELEASE_TAG }}"
           git status
