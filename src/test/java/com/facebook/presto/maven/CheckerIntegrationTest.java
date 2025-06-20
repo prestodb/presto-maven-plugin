@@ -116,17 +116,17 @@ public class CheckerIntegrationTest
         File basedir = resources.getBasedir("no-plugins");
         maven.forProject(basedir)
                 .execute("verify")
-                .assertLogText("[ERROR] You must have at least one class that implements com.facebook.presto.spi.Plugin or com.facebook.presto.spi.CoordinatorPlugin.");
+                .assertLogText("[ERROR] You must have at least one class that implements com.facebook.presto.spi.Plugin, com.facebook.presto.spi.CoordinatorPlugin, or com.facebook.presto.spi.RouterPlugin.");
     }
 
     @Test
-    public void testBothPluginImplementations()
+    public void testMultiplePluginImplementations()
             throws Exception
     {
-        File basedir = resources.getBasedir("both-plugins");
+        File basedir = resources.getBasedir("multiple-plugins");
         maven.forProject(basedir)
                 .execute("verify")
-                .assertLogText("You have classes that implement both com.facebook.presto.spi.Plugin and com.facebook.presto.spi.CoordinatorPlugin. " +
+                .assertLogText("You have classes that implement multiple of com.facebook.presto.spi.Plugin, com.facebook.presto.spi.CoordinatorPlugin, or com.facebook.presto.spi.RouterPlugin. " +
                         "You can only have one plugin implementation per project.");
     }
 }

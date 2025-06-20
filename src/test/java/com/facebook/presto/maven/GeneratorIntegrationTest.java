@@ -24,6 +24,7 @@ public class GeneratorIntegrationTest
 {
     private static final String PLUGIN_DESCRIPTOR = "META-INF/services/com.facebook.presto.spi.Plugin";
     private static final String COORDINATOR_PLUGIN_DESCRIPTOR = "META-INF/services/com.facebook.presto.spi.CoordinatorPlugin";
+    private static final String ROUTER_PLUGIN_DESCRIPTOR = "META-INF/services/com.facebook.presto.spi.RouterPlugin";
 
     @Rule
     public final TestResources resources = new TestResources();
@@ -65,4 +66,20 @@ public class GeneratorIntegrationTest
         List<String> lines = readAllLines(output.toPath(), UTF_8);
         assertEquals(ImmutableList.of("its.BasicCoordinatorPlugin"), lines);
     }
+
+    @Test
+    public void testBasicRouterPlugin()
+            throws Exception
+    {
+        File basedir = resources.getBasedir("basic-router-plugin");
+        maven.forProject(basedir)
+                .execute("package")
+                .assertErrorFreeLog();
+
+        File output = new File(basedir, "target/classes/" + ROUTER_PLUGIN_DESCRIPTOR);
+
+        List<String> lines = readAllLines(output.toPath(), UTF_8);
+        assertEquals(ImmutableList.of("its.BasicRouterPlugin"), lines);
+    }
+
 }

@@ -15,6 +15,7 @@ package com.facebook.presto.maven;
 
 import com.facebook.presto.spi.Plugin;
 import com.facebook.presto.spi.CoordinatorPlugin;
+import com.facebook.presto.spi.RouterPlugin;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
@@ -33,7 +34,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static java.lang.String.format;
 
@@ -49,6 +52,7 @@ public class ServiceDescriptorGenerator
         extends AbstractMojo
 {
     private static final String LS = System.getProperty("line.separator");
+    private static final Class<?>[] PLUGIN_TYPES = new Class<?>[] {Plugin.class, CoordinatorPlugin.class, RouterPlugin.class};
 
     @Parameter(defaultValue = "${project.build.outputDirectory}/META-INF/services/com.facebook.presto.spi.Plugin")
     private File servicesFile;
@@ -72,37 +76,38 @@ public class ServiceDescriptorGenerator
             mkdirs(servicesFile.getParentFile());
         }
 
-        List<Class<?>> pluginClasses;
-        List<Class<?>> coordinatorPluginClasses;
+        Map<Class<?>, List<Class<?>>> pluginClassMap = new HashMap<>();
 
         try {
             URLClassLoader loader = createClassloaderFromCompileTimeDependencies();
-            pluginClasses = findImplementationsOf(Plugin.class, loader);
-            coordinatorPluginClasses = findImplementationsOf(CoordinatorPlugin.class, loader);
+            for (Class<?> pluginType : PLUGIN_TYPES) {
+                pluginClassMap.put(pluginType, findImplementationsOf(pluginType, loader));
+            }
         }
         catch (Exception e) {
-            throw new MojoExecutionException(format("%n%nError scanning for classes implementing %s and %s.", Plugin.class.getName(), CoordinatorPlugin.class.getName()), e);
+            throw new MojoExecutionException(format("%n%nError scanning for classes implementing %s, %s, and %s.", Plugin.class.getName(), CoordinatorPlugin.class.getName(), RouterPlugin.class.getName()), e);
         }
 
-        if (pluginClasses.isEmpty() && coordinatorPluginClasses.isEmpty()) {
-            throw new MojoExecutionException(format("%n%nYou must have at least one class that implements %s or %s.", Plugin.class.getName(), CoordinatorPlugin.class.getName()));
+        if (pluginClassMap.values().stream().allMatch(List::isEmpty)) {
+            throw new MojoExecutionException(format("%n%nYou must have at least one class that implements %s, %s, or %s.", Plugin.class.getName(), CoordinatorPlugin.class.getName(), RouterPlugin.class.getName()));
         }
 
-        if (!pluginClasses.isEmpty() && !coordinatorPluginClasses.isEmpty()) {
-            throw new MojoExecutionException(format("%n%nYou have classes that implement both %s and %s. You can only have one plugin implementation per project.", Plugin.class.getName(), CoordinatorPlugin.class.getName()));
+        if (pluginClassMap.values().stream().filter(l -> !l.isEmpty()).count() > 1) {
+            throw new MojoExecutionException(format("%n%nYou have classes that implement multiple of %s, %s, or %s. You can only have one plugin implementation per project.", Plugin.class.getName(), CoordinatorPlugin.class.getName(), RouterPlugin.class.getName()));
         }
 
-        if (!pluginClasses.isEmpty()) {
-            ensureSinglePluginImplementation(pluginClasses, Plugin.class);
-            writeServiceDescriptor(pluginClasses, Plugin.class, servicesFile);
+        for (Class<?> pluginType : pluginClassMap.keySet()) {
+            List<Class<?>> pluginTypeClasses = pluginClassMap.get(pluginType);
+            if (pluginTypeClasses == null || pluginTypeClasses.isEmpty()) {
+                continue;
+            }
+            ensureSinglePluginImplementation(pluginTypeClasses, pluginType);
+            File typeServicesFile = servicesFile;
+            if (pluginType.equals(CoordinatorPlugin.class) || pluginType.equals(RouterPlugin.class)) {
+                typeServicesFile = new File(servicesFile.getParent() + "/" + pluginType.getName());
+            }
+            writeServiceDescriptor(pluginTypeClasses, pluginType, typeServicesFile);
         }
-        else {
-            ensureSinglePluginImplementation(coordinatorPluginClasses, CoordinatorPlugin.class);
-            // Create a new servicesFile if plugin implementation is of type CoordinatorPlugin.
-            File coordinatorPluginServicesFile = new File(servicesFile.getParent() + "/" + CoordinatorPlugin.class.getName());
-            writeServiceDescriptor(coordinatorPluginClasses, CoordinatorPlugin.class,  coordinatorPluginServicesFile);
-        }
-
     }
 
     private void writeServiceDescriptor(List<Class<?>> pluginClasses, Class<?> classImplementationTemplate, File servicesFileToWrite)
