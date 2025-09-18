@@ -41,7 +41,7 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           overwrite-settings: true
-          server-id: ossrh
+          server-id: sonatype.releases
           server-username: NEXUS_USERNAME
           server-password: NEXUS_PASSWORD
           gpg-private-key: ${{ secrets.GPG_SECRET }}
