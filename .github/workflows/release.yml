@@ -42,8 +42,8 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           overwrite-settings: true
           server-id: ossrh
-          server-username: ${{ env.NEXUS_USERNAME }}
-          server-password: ${{ env.NEXUS_PASSWORD }}
+          server-username: NEXUS_USERNAME
+          server-password: NEXUS_PASSWORD
           gpg-private-key: ${{ secrets.GPG_SECRET }}
 
       - name: Set up git
