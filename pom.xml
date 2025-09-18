@@ -170,7 +170,7 @@
                         <extensions>true</extensions>
                         <configuration>
                             <deploymentName>presto-maven-plugin</deploymentName>
-                            <publishingServerId>ossrh</publishingServerId>
+                            <publishingServerId>sonatype.releases</publishingServerId>
                             <autoPublish>true</autoPublish>
                             <waitUntil>validated</waitUntil>
                         </configuration>
