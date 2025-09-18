@@ -32,6 +32,15 @@
         <maven>[3.2.1,)</maven>
     </prerequisites>
 
+    <distributionManagement>
+        <repository>
+            <id>sonatype.releases</id>
+            <name>Sonatype Releases</name>
+            <url>https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+
+
     <dependencies>
         <dependency>
             <groupId>org.apache.maven</groupId>
@@ -138,7 +147,6 @@
                                 <arg>--pinentry-mode</arg>
                                 <arg>loopback</arg>
                             </gpgArguments>
-                            <passphrase>${GPG_PASSPHRASE}</passphrase>
                         </configuration>
                         <executions>
                             <execution>
@@ -156,8 +164,16 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.8.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <deploymentName>presto-maven-plugin</deploymentName>
+                            <publishingServerId>ossrh</publishingServerId>
+                            <autoPublish>true</autoPublish>
+                            <waitUntil>validated</waitUntil>
+                        </configuration>
                     </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
