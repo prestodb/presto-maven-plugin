@@ -81,15 +81,24 @@ jobs:
           grep -m 1 "<version>" pom.xml
           git ls -5
 
-      - name: Publish release
+      - name: Upload artifacts
         run: |
           git checkout presto-maven-plugin-${{ env.RELEASE_VERSION }}
           git ls -5
           cat ~/.m2/settings.xml
+          mvn clean install
           mvn -V -B -U -e -T2C deploy \
             -Ptakari-release \
             -Pdeploy-to-ossrh \
             -DskipTests
+
+      - name: Publish artifacts
+        run: |
+          set -e
+          AUTH_TOKEN=$(echo -n "${NEXUS_USERNAME}:${NEXUS_PASSWORD}" | base64)
+          echo "::add-mask::${AUTH_TOKEN}"
+          curl -v -X POST "https://ossrh-staging-api.central.sonatype.com/manual/upload/defaultRepository/com.facebook?publishing_type=automatic" \
+            -H "Authorization: Bearer ${AUTH_TOKEN}"
 
       - name: Push changes and tags
         run: |
